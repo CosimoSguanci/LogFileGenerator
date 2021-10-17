@@ -1,5 +1,7 @@
 package Tasks
 
+import HelperUtils.CreateLogger
+import Tasks.Utils.TaskUtils
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
@@ -19,35 +21,52 @@ object Task1 {
   class Task1Mapper extends Mapper[Object, Text, Text, Text] {
 
     val logPattern = new Regex("(DEBUG)|(INFO)|(WARN)|(ERROR)")
-
     val config: Config = ConfigFactory.load("application.conf")
+    val logger = CreateLogger(classOf[Task1Mapper])
+
+    // The log line is splitted using spaces ad delimiter
+    val logLineDelimiter = " "
 
     override def map(key: Object, value: Text, context: Mapper[Object, Text, Text, Text]#Context): Unit = {
-      val tokens = value.toString.split(" ")
 
-      val time: LocalTime = LocalTime.parse(tokens(0))
+      logger.info("Starting map to analyze log lines...")
 
-      val timeIntervals = config.getObjectList("task1.timeIntervals").asScala.toList
+      val tokens = value.toString.split(logLineDelimiter)
 
-      val timeIntervalMaps: List[Map[String, LocalTime]] = timeIntervals.map(timeInterval => {
-        val interval = timeInterval.toConfig
-        val startTime: LocalTime = LocalTime.parse(interval.getString("start"))
-        val endTime: LocalTime = LocalTime.parse(interval.getString("end"))
+      logger.info("Log line splitted in tokens...")
 
-        Map.apply("start" -> startTime, "end" -> endTime)
-      })
+      // tokens(0) contains the timestamp of the log
+      val logTime: LocalTime = LocalTime.parse(tokens(0))
 
-      val rightTimeInterval: Map[String, LocalTime] = timeIntervalMaps.find(timeIntervalMap => {
-        time.isAfter(timeIntervalMap("start")) && time.isBefore(timeIntervalMap("end"))
-      }).getOrElse(null)
+      logger.info("Parsed timestamp of the current analyzed log...")
+
+      val timeIntervalMaps: List[Map[String, LocalTime]] = TaskUtils.parseTimeIntervalsFromConfig(config, "task1.timeIntervals")
+
+      logger.info("Retrieved time intervals from config to be analyzed in log file...")
+
+      val rightTimeInterval: Map[String, LocalTime] = TaskUtils.getRightTimeInterval(logTime, timeIntervalMaps)
+
+      // If the right time interval is not found, this means that the current log doesn't have to be analyzed,
+      // because it is not in one of the time intervals specified in config
 
       if (rightTimeInterval != null) {
+
+        logger.info("Right time interval identified for current log...")
+
         val k = s"${rightTimeInterval("start")} - ${rightTimeInterval("end")}"
 
-        tokens.foreach(t => {
-          val logLevel = logPattern.findFirstIn(t).getOrElse(null)
+        tokens.foreach(token => {
+          val logLevel = logPattern.findFirstIn(token).getOrElse(null)
           if (logLevel != null) {
+
+            logger.info(s"Found log type: $logLevel")
+
+            // The key is composed by the time interval and the log type being analyzed, the value is the current Regex instance.
+            // The length of the array of values (Regex instances) corresponding to each key will be used by the reducer to identify
+            // the distribution of log types across the time intervals defined in config
             context.write(new Text(s"$k - $logLevel"), new Text(tokens(tokens.length - 1)))
+
+            logger.info("Context written for current log line [MAP]")
           }
         })
       }
@@ -55,16 +74,32 @@ object Task1 {
   }
 
   class Task1Reducer extends Reducer[Text, Text, Text, Text] {
+
+    val logger = CreateLogger(classOf[Task1Reducer])
+    val csvDelimiter = ","
+
     override def reduce(key: Text, values: Iterable[Text], context: Reducer[Text, Text, Text, Text]#Context): Unit = {
 
+      logger.info("Starting reducer to analyze log lines...")
+      
+      // We convert Texts to Strings
       val stringInstances = values.asScala.map(v => v.toString).toList
-      val csvString = stringInstances.mkString(",")
+
+      logger.info("Converted Texts to Strings [Regex instances]...")
+      
+      // We create a long csv-compliant String that contains all the Regex instances for the current key
+      val csvString = stringInstances.mkString(csvDelimiter)
+
+      logger.info("Created csv compliant string with all the Regex instances...")
+      
+      // The length of the string instances of a certain log type in a certain time interval represents the 
+      // distribution that we are searching
       val num = stringInstances.length
 
-      val value = new Text()
-      value.set(s"$num,$csvString")
+      val value = new Text(s"$num,$csvString")
       context.write(key, value)
 
+      logger.info("Context written for current log line [REDUCER]")
     }
   }
 
