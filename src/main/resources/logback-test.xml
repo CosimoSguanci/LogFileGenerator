@@ -10,7 +10,7 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- Daily rollover -->
             <fileNamePattern>log/LogFileGenerator.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>5KB</maxFileSize>
+            <maxFileSize>100KB</maxFileSize>
         </rollingPolicy>
 
         <encoder>

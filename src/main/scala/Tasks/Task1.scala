@@ -1,5 +1,6 @@
 package Tasks
 
+import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.{IntWritable, Text}
@@ -8,6 +9,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat
 import org.apache.hadoop.mapreduce.{Job, Mapper, Reducer}
 
 import java.lang.Iterable
+import java.time.LocalTime
 import java.util.StringTokenizer
 import scala.collection.JavaConverters.*
 import scala.util.matching.Regex
@@ -18,16 +20,37 @@ object Task1 {
 
     val logPattern = new Regex("(DEBUG)|(INFO)|(WARN)|(ERROR)")
 
+    val config: Config = ConfigFactory.load("application.conf")
+
     override def map(key: Object, value: Text, context: Mapper[Object, Text, Text, Text]#Context): Unit = {
       val tokens = value.toString.split(" ")
 
-      tokens.foreach(t => {
-        val logLevel = logPattern.findFirstIn(t).getOrElse(null)
-        if (logLevel != null) {
-          context.write(new Text(logLevel), new Text(tokens(tokens.length - 1)))
-        }
+      val time: LocalTime = LocalTime.parse(tokens(0))
 
+      val timeIntervals = config.getObjectList("task1.timeIntervals").asScala.toList
+
+      val timeIntervalMaps: List[Map[String, LocalTime]] = timeIntervals.map(timeInterval => {
+        val interval = timeInterval.toConfig
+        val startTime: LocalTime = LocalTime.parse(interval.getString("start"))
+        val endTime: LocalTime = LocalTime.parse(interval.getString("end"))
+
+        Map.apply("start" -> startTime, "end" -> endTime)
       })
+
+      val rightTimeInterval: Map[String, LocalTime] = timeIntervalMaps.find(timeIntervalMap => {
+        time.isAfter(timeIntervalMap("start")) && time.isBefore(timeIntervalMap("end"))
+      }).getOrElse(null)
+
+      if (rightTimeInterval != null) {
+        val k = s"${rightTimeInterval("start")} - ${rightTimeInterval("end")}"
+
+        tokens.foreach(t => {
+          val logLevel = logPattern.findFirstIn(t).getOrElse(null)
+          if (logLevel != null) {
+            context.write(new Text(s"$k - $logLevel"), new Text(tokens(tokens.length - 1)))
+          }
+        })
+      }
     }
   }
 
