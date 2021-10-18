@@ -16,8 +16,15 @@ import java.util.StringTokenizer
 import scala.collection.JavaConverters.*
 import scala.util.matching.Regex
 
+/**
+ * Task1: shows the distribution of different log types across predefined time intervals,
+ * also showing the injected Regex String instances injected by the Log generator
+ */
 object Task1 {
 
+  /**
+   * Mapper for Task1, it takes as input shards of logs and read them line by line.
+   */
   class Task1Mapper extends Mapper[Object, Text, Text, Text] {
 
     val logPattern = new Regex("(DEBUG)|(INFO)|(WARN)|(ERROR)")
@@ -27,6 +34,18 @@ object Task1 {
     // The log line is splitted using spaces ad delimiter
     val logLineDelimiter = " "
 
+    /**
+     * The Map function produces the key-value pair with the following format:
+     *
+     * key: <Time Interval> + <Log type>
+     * value: <Regex Instance>
+     *
+     * If the current analyzed log timestamp is not included in the configured time intervals to be analyzed, it gets skipped.
+     *
+     * @param key original map key
+     * @param value log line
+     * @param context Hadoop context to write key-value pairs
+     */
     override def map(key: Object, value: Text, context: Mapper[Object, Text, Text, Text]#Context): Unit = {
 
       logger.info("Starting map to analyze log lines...")
@@ -73,26 +92,41 @@ object Task1 {
     }
   }
 
+  /**
+   * Reducer for Task1, it takes as input the output of the Map task,
+   * and produces the distribution of each log type in each predefined time interval
+   */
   class Task1Reducer extends Reducer[Text, Text, Text, Text] {
 
     val logger = CreateLogger(classOf[Task1Reducer])
     val csvDelimiter = ","
 
+    /**
+     * The Reduce function aggregates the key-value pairs passed by the Mapper in order to count
+     * the number of Regex Instances for each log type and for each analyzed time interval
+     *
+     * key: <Time Interval> + <Log type>
+     * value: <Number of detected Regex Instances>, <List of detected Regex Instances>
+     *
+     * @param key The key produced by the Mapper [<Time Interval> + <Log type>]
+     * @param values The list of Regex Instances for each key
+     * @param context Hadoop context to write key-value pairs
+     */
     override def reduce(key: Text, values: Iterable[Text], context: Reducer[Text, Text, Text, Text]#Context): Unit = {
 
       logger.info("Starting reducer to analyze log lines...")
-      
+
       // We convert Texts to Strings
       val stringInstances = values.asScala.map(v => v.toString).toList
 
       logger.info("Converted Texts to Strings [Regex instances]...")
-      
+
       // We create a long csv-compliant String that contains all the Regex instances for the current key
       val csvString = stringInstances.mkString(csvDelimiter)
 
       logger.info("Created csv compliant string with all the Regex instances...")
-      
-      // The length of the string instances of a certain log type in a certain time interval represents the 
+
+      // The length of the string instances of a certain log type in a certain time interval represents the
       // distribution that we are searching
       val num = stringInstances.length
 
