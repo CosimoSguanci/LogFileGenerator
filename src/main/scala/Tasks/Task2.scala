@@ -1,7 +1,7 @@
 package Tasks
 
 import HelperUtils.CreateLogger
-import Tasks.Utils.{DecreasingIntComparator, TaskUtils}
+import Tasks.Utils.{DescendingIntComparator, TaskUtils}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
@@ -208,7 +208,7 @@ object Task2 {
     job2.setOutputValueClass(classOf[Text])
 
     // Custom Sort Comparator for descending ordering
-    job2.setSortComparatorClass(classOf[DecreasingIntComparator])
+    job2.setSortComparatorClass(classOf[DescendingIntComparator])
     FileInputFormat.addInputPath(job2, new Path(args(1)))
     FileOutputFormat.setOutputPath(job2, new Path(args(2)))
     System.exit(if (job2.waitForCompletion(true)) 0 else 1)
