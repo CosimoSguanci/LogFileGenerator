@@ -26,12 +26,12 @@ object Task2 {
    */
   class Task2Mapper extends Mapper[Object, Text, Text, Text] {
 
-    val logPattern = new Regex("(ERROR)")
     val config: Config = ConfigFactory.load("application.conf")
+    val logPattern = new Regex(config.getString("task2.logPattern"))
     val logger = CreateLogger(classOf[Task2Mapper])
 
     // The log line is splitted using spaces ad delimiter
-    val logLineDelimiter = " "
+    val logLineDelimiter = config.getString("task2.logLineDelimiter")
 
     /**
      * The Map function produces the key-value pair with the following format:
@@ -41,26 +41,26 @@ object Task2 {
      *
      * If the current analyzed log timestamp is not included in the configured time intervals to be analyzed, it gets skipped.
      *
-     * @param key original map key
-     * @param value log line
+     * @param key     original map key
+     * @param value   log line
      * @param context Hadoop context to write key-value pairs
      */
     override def map(key: Object, value: Text, context: Mapper[Object, Text, Text, Text]#Context): Unit = {
 
-      logger.info("Starting map to analyze log lines...")
+      logger.info("[TASK 2 - JOB 1] Starting map to analyze log lines...")
 
       val tokens = value.toString.split(logLineDelimiter)
 
-      logger.info("Log line splitted in tokens...")
+      logger.info("[TASK 2 - JOB 1] Log line splitted in tokens...")
 
       // tokens(0) contains the timestamp of the log
       val logTime: LocalTime = LocalTime.parse(tokens(0))
 
-      logger.info("Parsed timestamp of the current analyzed log...")
+      logger.info("[TASK 2 - JOB 1] Parsed timestamp of the current analyzed log...")
 
       val timeIntervalMaps: List[Map[String, LocalTime]] = TaskUtils.parseTimeIntervalsFromConfig(config, "task2.timeIntervals")
 
-      logger.info("Retrieved time intervals from config to be analyzed in log file...")
+      logger.info("[TASK 2 - JOB 1] Retrieved time intervals from config to be analyzed in log file...")
 
       val rightTimeInterval: Map[String, LocalTime] = TaskUtils.getRightTimeInterval(logTime, timeIntervalMaps)
 
@@ -69,7 +69,7 @@ object Task2 {
 
       if (rightTimeInterval != null) {
 
-        logger.info("Right time interval identified for current log...")
+        logger.info("[TASK 2 - JOB 1] Right time interval identified for current log...")
 
         // The key is represented by the Time Interval, all numbers will be unambiguously referred to the ERROR log messages,
         // unlike Task 1 in which we had to divide the output for each possible log message type
@@ -79,12 +79,12 @@ object Task2 {
           val logLevel = logPattern.findFirstIn(t).getOrElse(null)
           if (logLevel != null) {
 
-            logger.info(s"Found log type: ERROR")
+            logger.info("[TASK 2 - JOB 1] Found log type: ERROR")
 
             // It is an error log line
             context.write(new Text(k), new Text(tokens(tokens.length - 1)))
 
-            logger.info("Context written for current log line [MAP]")
+            logger.info("[TASK 2 - JOB 1] Context written for current log line [MAP]")
           }
 
         })
@@ -98,8 +98,9 @@ object Task2 {
    */
   class Task2Reducer extends Reducer[Text, Text, Text, Text] {
 
+    val config: Config = ConfigFactory.load("application.conf")
     val logger = CreateLogger(classOf[Task2Reducer])
-    val csvDelimiter = ","
+    val csvDelimiter = config.getString("task2.csvDelimiter")
 
     /**
      * The Reduce function aggregates the key-value pairs passed by the Mapper in order to count
@@ -108,23 +109,23 @@ object Task2 {
      * key: <Time Interval>
      * value: <Number of detected Regex Instances>, <List of detected Regex Instances>
      *
-     * @param key The key produced by the Mapper [<Time Interval>]
-     * @param values The list of Regex Instances for each key
+     * @param key     The key produced by the Mapper [<Time Interval>]
+     * @param values  The list of Regex Instances for each key
      * @param context Hadoop context to write key-value pairs
      */
     override def reduce(key: Text, values: Iterable[Text], context: Reducer[Text, Text, Text, Text]#Context): Unit = {
 
-      logger.info("[TASK 2] Starting reducer to analyze log lines...")
+      logger.info("[TASK 2 - JOB 1] Starting reducer to analyze log lines...")
 
       // We convert Texts to Strings
       val stringInstances = values.asScala.map(v => v.toString).toList
 
-      logger.info("Converted Texts to Strings [Regex instances]...")
+      logger.info("[TASK 2 - JOB 1] Converted Texts to Strings [Regex instances]...")
 
       // We create a long csv-compliant String that contains all the Regex instances for the current key
       val csvString = stringInstances.mkString(csvDelimiter)
 
-      logger.info("Created the csv-compliant string that includes all the Regex instances...")
+      logger.info("[TASK 2 - JOB 1] Created the csv-compliant string that includes all the Regex instances...")
 
       // The length of the string instances of a certain log type in a certain time interval represents the
       // distribution that we are searching
@@ -133,7 +134,7 @@ object Task2 {
       val value = new Text(s"$num,$csvString")
       context.write(key, value)
 
-      logger.info("Context written for current log line [REDUCER]")
+      logger.info("[TASK 2 - JOB 1] Context written for current log line [REDUCER]")
     }
   }
 
@@ -142,6 +143,7 @@ object Task2 {
    */
   class Task2SortMapper extends Mapper[Object, Text, IntWritable, Text] {
 
+    val logger = CreateLogger(classOf[Task2SortMapper])
     val csvDelimiter = ","
 
     /**
@@ -154,8 +156,8 @@ object Task2 {
      * Doing this allows us to use the number of ERROR message occurrences in a certain time interval as KEY, and therefore
      * allows the use of a Comparator to sort the results by KEY, achieving the desired descending order.
      *
-     * @param key the time interval
-     * @param value the line of the results of job #1
+     * @param key     the time interval
+     * @param value   the line of the results of job #1
      * @param context Hadoop context to write key-value pairs
      */
     override def map(key: Object, value: Text, context: Mapper[Object, Text, IntWritable, Text]#Context): Unit = {
@@ -165,47 +167,22 @@ object Task2 {
       // values(1) contains the number of occurrences of ERROR messages in the current line of job #1 output
       val newKey = values(1)
 
+      logger.info("[TASK 2 - JOB 2] new key acquired...")
+
       // We remove the new key from the previous values
       val newValues = values.filter(v => !v.equals(newKey))
 
+      logger.info("[TASK 2 - JOB 2] new values computed...")
+
       // We write the new key-value pairs in the new format (num : time interval + instances)
       context.write(new IntWritable(newKey.toInt), new Text(newValues.mkString(csvDelimiter)))
+
+      logger.info("[TASK 2 - JOB 2] new context written for sorting...")
     }
   }
 
-/*  /**
-   * Reducer for job #2 of Task2, it takes as input the output of job #2 Map and decouples the time intervals
-   * that have the same number of occurences of ERROR log messages
-   */
-  class Task2SortReducer extends Reducer[IntWritable, Text, IntWritable, Text] {
-
-    /**
-     * The Reduce function decouples the time intervals that have the same number of occurences of ERROR log messages
-     * to show them in separate lines
-     *
-     * key: <Number of ERROR log messages in a certain time interval>
-     * value: <Time Interval> <Regex Instance>
-     *
-     * @param key The key produced by the Mapper
-     * @param values The time interval and the list of Regex Instances for each key
-     * @param context Hadoop context to write key-value pairs
-     */
-    override def reduce(key: IntWritable, values: Iterable[Text], context: Reducer[Text, Text, IntWritable, Text]#Context): Unit = {
-
-      // We convert Texts to Strings
-      val stringInstances: List[String] = values.asScala.map(v => v.toString).toList
-
-      // As of now, if two time intervals A and B had the same number of ERROR log messages, they are associated by the same key.
-      // We decouple them by rewriting the context
-      stringInstances.foreach(entry => {
-        context.write(key, new Text(entry))
-      })
-    }
-  }*/
-
-
   def main(args: Array[String]): Unit = {
-    // JOB 1
+    // JOB #1
     val configuration = new Configuration
     configuration.set("mapred.textoutputformat.separator", ",");
     val job = Job.getInstance(configuration, "task2")
@@ -218,13 +195,12 @@ object Task2 {
     FileOutputFormat.setOutputPath(job, new Path(args(1)))
     job.waitForCompletion(true)
 
-    // JOB 2
+    // JOB #2
     val configuration2 = new Configuration
     configuration.set("mapred.textoutputformat.separator", ",")
     val job2 = Job.getInstance(configuration, "task2 sort")
     job2.setJarByClass(this.getClass)
-    job2.setMapperClass(classOf[Task2SortMapper])
-    //job2.setReducerClass(classOf[Task2SortReducer])
+    job2.setMapperClass(classOf[Task2SortMapper]) // No need for the Reducer for the job #2
     job2.setOutputKeyClass(classOf[IntWritable])
     job2.setOutputValueClass(classOf[Text])
 

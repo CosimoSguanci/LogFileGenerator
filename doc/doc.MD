@@ -65,4 +65,4 @@ Example of output of the task:
 2,11:44:27 - 11:44:27.999,<example1>,<example2>
 ```
 
-This means that the `11:44:29 - 11:44:29.999` time interval had four `ERROR` log messages, while the other had two. To achieve this, an additional MapReduce Job have been implemented to swap the key and part of the value (the part that contains the number of occurrences), in addition to the use of a custom `SortComparatorClass` to sort the results in descending order by key.
+This means that the `11:44:29 - 11:44:29.999` time interval had four `ERROR` log messages, while the other had two. To achieve this, an additional MapReduce Job have been implemented to swap the key and part of the value (the part that contains the number of occurrences), in addition to the use of a custom implemented `SortComparatorClass`(`DecreasingIntComparator`) to sort the results in descending order by the new key.
