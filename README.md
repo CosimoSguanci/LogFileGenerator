@@ -49,14 +49,12 @@ hadoop jar LogFileGenerator-assembly-0.1.jar Tasks.Task1 logs/input logs/output
 
 Assuming that we are in the root home directory (~), where we previously placed the JAR file.
 
-To run different tasks, we can change the command by using `Tasks.TaskX`, replacing `X` with the actual identifier of the task that we want to run. This is possible because the fat JAR generated contains `main` methods for all the required tasks for this homework.
+To run different tasks, we can change the command by using `Tasks.TaskX`, replacing `X` with the actual identifier of the task that we want to run. This is possible because the fat generated JAR contains `main` methods for all the required tasks for this homework.
 
-The only tasks for which it's necessary to slightly change the procedure is the task number 2, that requires to MapReduce jobs in a pipeline-like style, for this reason we have to specify a second output folder, with the first that will be used also as input to the second job:
+The only task for which it's necessary to slightly change the procedure is the task number 2, that requires to run two MapReduce jobs in a pipeline-like style; for this reason we have to specify a second output folder, with the first that will be used also as input to the second job:
 
 ```
 hadoop jar LogFileGenerator-assembly-0.1.jar Tasks.Task2 logs/input logs/output logs/output2
 ```
-
-
 
 Details about the implemented tasks can be found in the `doc/DOC.md` file, while example of input/output for all the tasks can be found in the `results` folder.
