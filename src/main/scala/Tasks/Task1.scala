@@ -124,7 +124,7 @@ object Task1 {
       // We create a long csv-compliant String that contains all the Regex instances for the current key
       val csvString = stringInstances.mkString(csvDelimiter)
 
-      logger.info("Created csv compliant string with all the Regex instances...")
+      logger.info("Created the csv-compliant string that includes all the Regex instances...")
 
       // The length of the string instances of a certain log type in a certain time interval represents the
       // distribution that we are searching
