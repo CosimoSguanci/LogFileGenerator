@@ -38,6 +38,6 @@ The interpretation adopted for the first task is the following:
   11:44:29 - 11:44:29.999 - ERROR,1,<example1>
   11:44:29 - 11:44:29.999 - INFO,1,<example1>
   11:44:29 - 11:44:29.999 - WARN,2,<example1>,<example2>
-
+  ```
 
 The first line means that in the input logs there are 5 `DEBUG` messages and 2 `ERROR` messages in the time interval `11:44:27 - 11:44:27.999`, and so on.
