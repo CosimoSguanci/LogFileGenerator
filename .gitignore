@@ -5,8 +5,9 @@ project/
 target/
 build/
 out/
+log/
 
-*.log
+# *.log
 *.iml
 *.ipr
 *.iws
