@@ -151,20 +151,4 @@ object Task1 {
     FileOutputFormat.setOutputPath(job, new Path(args(1)))
     System.exit(if (job.waitForCompletion(true)) 0 else 1)
   }
-
-  //  def test(): Unit = {
-  //    val pattern = new Regex("(TRACE)|(DEBUG)|(INFO)|(WARN)|(ERROR)|(FATAL)")
-  //
-  //    val value = "17:44:16.682 [scala-execution-context-global-116] WARN  HelperUtils.Parameters$ - s%]s,+2k|D}K7b/XCwG&@7HDPR8z"
-  //    val tokens = value.toString.split(" ")
-  //
-  //    tokens.foreach(t => {
-  //      val logLevel = pattern.findFirstIn(t).getOrElse(null)
-  //      if(logLevel != null) {
-  //        print(tokens(tokens.length - 1))
-  //      }
-  //
-  //    })
-  //  }
-
 }
