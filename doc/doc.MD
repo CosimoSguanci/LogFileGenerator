@@ -70,3 +70,21 @@ This means that the `11:44:29 - 11:44:29.999` time interval had four `ERROR` log
 ## Task 3
 ### Generate a CSV file with, for each log message type, the distribution (count of instances) across all the logs given as input
 This task represents the *aggregation version* of Task1, without the configurable time intervals. In addition, in this case Regex instances for each log message type are not requested.
+Example of output of the task:
+```
+DEBUG,175
+ERROR,17
+INFO,1217
+WARN,323
+```
+
+## Task 4
+### Generate a CSV file with, for each log message type, the maximum number of characters found in the Regex string instances injected by the log generator
+In this task we have to find the number of characters of the longest Regex string instance, for each log message type.
+Example of output of the task:
+```
+DEBUG,80
+ERROR,58
+INFO,85
+WARN,80
+```

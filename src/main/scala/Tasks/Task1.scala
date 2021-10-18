@@ -17,7 +17,7 @@ import scala.collection.JavaConverters.*
 import scala.util.matching.Regex
 
 /**
- * Task1: shows the distribution of different log types across predefined time intervals,
+ * Task1: show the distribution of different log types across predefined time intervals,
  * also showing the injected Regex String instances injected by the Log generator
  */
 object Task1 {
@@ -139,15 +139,17 @@ object Task1 {
   }
 
   def main(args: Array[String]): Unit = {
+    val config: Config = ConfigFactory.load("application.conf")
+    val csvDelimiter = config.getString("task1.csvDelimiter")
+    
     val configuration = new Configuration
-    configuration.set("mapred.textoutputformat.separator", ",");
+    configuration.set("mapred.textoutputformat.separator", csvDelimiter)
     val job = Job.getInstance(configuration, "task1")
     job.setJarByClass(this.getClass)
     job.setMapperClass(classOf[Task1Mapper])
     job.setReducerClass(classOf[Task1Reducer])
     job.setOutputKeyClass(classOf[Text])
     job.setOutputValueClass(classOf[Text])
-
     FileInputFormat.addInputPath(job, new Path(args(0)))
     FileOutputFormat.setOutputPath(job, new Path(args(1)))
     System.exit(if (job.waitForCompletion(true)) 0 else 1)

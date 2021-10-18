@@ -59,9 +59,9 @@ object Task3 {
 
           logger.info(s"[TASK 3] Found log type: $logLevel")
 
-          // The key is composed by the log type being analyzed, the value is the current Regex instance.
-          // The length of the array of values (Regex instances) corresponding to each key will be used by the reducer to identify
-          // the distribution of log types across all the logs
+          // The key is composed by the log type being analyzed, the value is the IntWritable 1.
+          // All the ones contained in the list of values associated to a certain log message type will be used
+          // by the reducer to aggregate results by sum and obtain the total number of instances
           context.write(new Text(logLevel), one)
 
           logger.info("[TASK 3] Context written for current log line [MAP]")
@@ -106,15 +106,17 @@ object Task3 {
   }
 
   def main(args: Array[String]): Unit = {
+    val config: Config = ConfigFactory.load("application.conf")
+    val csvDelimiter = config.getString("task3.csvDelimiter")
+
     val configuration = new Configuration
-    configuration.set("mapred.textoutputformat.separator", ",");
+    configuration.set("mapred.textoutputformat.separator", csvDelimiter)
     val job = Job.getInstance(configuration, "task3")
     job.setJarByClass(this.getClass)
     job.setMapperClass(classOf[Task3Mapper])
     job.setReducerClass(classOf[Task3Reducer])
     job.setOutputKeyClass(classOf[Text])
     job.setOutputValueClass(classOf[IntWritable])
-
     FileInputFormat.addInputPath(job, new Path(args(0)))
     FileOutputFormat.setOutputPath(job, new Path(args(1)))
     System.exit(if (job.waitForCompletion(true)) 0 else 1)

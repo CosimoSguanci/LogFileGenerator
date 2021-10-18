@@ -182,9 +182,12 @@ object Task2 {
   }
 
   def main(args: Array[String]): Unit = {
+    val config: Config = ConfigFactory.load("application.conf")
+    val csvDelimiter = config.getString("task2.csvDelimiter")
+    
     // JOB #1
     val configuration = new Configuration
-    configuration.set("mapred.textoutputformat.separator", ",");
+    configuration.set("mapred.textoutputformat.separator", csvDelimiter)
     val job = Job.getInstance(configuration, "task2")
     job.setJarByClass(this.getClass)
     job.setMapperClass(classOf[Task2Mapper])
