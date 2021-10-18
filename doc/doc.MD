@@ -88,3 +88,5 @@ ERROR,58
 INFO,85
 WARN,80
 ```
+<br/>
+In the `results` folder some input and output examples have been inserted for each task
