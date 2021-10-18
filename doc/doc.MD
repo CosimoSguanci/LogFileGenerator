@@ -10,6 +10,7 @@ In order to create shards, the `RollingPolicy` contained in the `logback.xml` fi
 ```
 By using `SizeAndTimeBasedRollingPolicy` we split the log files in shards of 100KB each. During testing, the `MaxCount` parameter in `application.conf` has been set to 5000: this led to the creation of approximately six shards for each test.
 
+For each task, input/output examples have been inserted in the `results` folder.
 
 ## Task 1
 ### Generate a CSV file that show the distribution of different log types across (divided by) predefined time intervals, together with the list of Regex instances injected by the log generator 
@@ -87,6 +88,4 @@ DEBUG,80
 ERROR,58
 INFO,85
 WARN,80
-```
-<br/>
-In the `results` folder some input and output examples have been inserted for each task
+```  
