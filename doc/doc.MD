@@ -66,3 +66,7 @@ Example of output of the task:
 ```
 
 This means that the `11:44:29 - 11:44:29.999` time interval had four `ERROR` log messages, while the other had two. To achieve this, an additional MapReduce Job have been implemented to swap the key and part of the value (the part that contains the number of occurrences), in addition to the use of a custom implemented `SortComparatorClass`(`DecreasingIntComparator`) to sort the results in descending order by the new key.
+
+## Task 3
+### Generate a CSV file with, for each log message type, the distribution (count of instances) across all the logs given as input
+This task represents the *aggregation version* of Task1, without the configurable time intervals. In addition, in this case Regex instances for each log message type are not requested.

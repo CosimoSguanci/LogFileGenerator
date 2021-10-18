@@ -24,7 +24,7 @@ object Task3 {
   /**
    * Mapper for Task3, it takes as input shards of logs and read them line by line.
    */
-  class Task3Mapper extends Mapper[Object, Text, Text, Text] {
+  class Task3Mapper extends Mapper[Object, Text, Text, IntWritable] {
 
     val config: Config = ConfigFactory.load("application.conf")
     val logPattern = new Regex(config.getString("task3.logPattern"))
@@ -32,6 +32,8 @@ object Task3 {
 
     // The log line is splitted using spaces ad delimiter
     val logLineDelimiter = config.getString("task3.logLineDelimiter")
+
+    val one = new IntWritable(1)
 
     /**
      * The Map function produces the key-value pair with the following format:
@@ -43,14 +45,14 @@ object Task3 {
      * @param value   log line
      * @param context Hadoop context to write key-value pairs
      */
-    override def map(key: Object, value: Text, context: Mapper[Object, Text, Text, Text]#Context): Unit = {
+    override def map(key: Object, value: Text, context: Mapper[Object, Text, Text, IntWritable]#Context): Unit = {
 
       logger.info("[TASK 3] Starting map to analyze log lines...")
 
       val tokens = value.toString.split(logLineDelimiter)
 
       logger.info("[TASK 3] Log line splitted in tokens...")
-      
+
       tokens.foreach(token => {
         val logLevel = logPattern.findFirstIn(token).getOrElse(null)
         if (logLevel != null) {
@@ -60,7 +62,7 @@ object Task3 {
           // The key is composed by the log type being analyzed, the value is the current Regex instance.
           // The length of the array of values (Regex instances) corresponding to each key will be used by the reducer to identify
           // the distribution of log types across all the logs
-          context.write(new Text(logLevel), new Text(tokens(tokens.length - 1)))
+          context.write(new Text(logLevel), one)
 
           logger.info("[TASK 3] Context written for current log line [MAP]")
         }
@@ -72,7 +74,7 @@ object Task3 {
    * Reducer for Task3, it takes as input the output of the Map task,
    * and produces the distribution of each log type in each predefined time interval
    */
-  class Task3Reducer extends Reducer[Text, Text, Text, Text] {
+  class Task3Reducer extends Reducer[Text, IntWritable, Text, IntWritable] {
 
     val config: Config = ConfigFactory.load("application.conf")
     val logger = CreateLogger(classOf[Task3Reducer])
@@ -89,26 +91,15 @@ object Task3 {
      * @param values  The list of Regex Instances for each key
      * @param context Hadoop context to write key-value pairs
      */
-    override def reduce(key: Text, values: Iterable[Text], context: Reducer[Text, Text, Text, Text]#Context): Unit = {
+    override def reduce(key: Text, values: Iterable[IntWritable], context: Reducer[Text, IntWritable, Text, IntWritable]#Context): Unit = {
 
       logger.info("[TASK 3] Starting reducer to analyze log lines...")
 
-      // We convert Texts to Strings
-      val stringInstances = values.asScala.map(v => v.toString).toList
+      val instancesCount: Int = values.asScala.map(v => v.get()).toList.sum
 
-      logger.info("[TASK 3] Converted Texts to Strings [Regex instances]...")
+      logger.info(s"[TASK 3] Occurences of ${key.toString} log type sum done...")
 
-      // We create a long csv-compliant String that contains all the Regex instances for the current key
-      val csvString = stringInstances.mkString(csvDelimiter)
-
-      logger.info("[TASK 3] Created the csv-compliant string that includes all the Regex instances...")
-
-      // The length of the string instances of a certain log type in a certain time interval represents the
-      // distribution that we are searching
-      val num = stringInstances.length
-
-      val value = new Text(s"$num,$csvString")
-      context.write(key, value)
+      context.write(key, new IntWritable(instancesCount))
 
       logger.info("[TASK 3] Context written for current log line [REDUCER]")
     }
@@ -122,7 +113,7 @@ object Task3 {
     job.setMapperClass(classOf[Task3Mapper])
     job.setReducerClass(classOf[Task3Reducer])
     job.setOutputKeyClass(classOf[Text])
-    job.setOutputValueClass(classOf[Text])
+    job.setOutputValueClass(classOf[IntWritable])
 
     FileInputFormat.addInputPath(job, new Path(args(0)))
     FileOutputFormat.setOutputPath(job, new Path(args(1)))
