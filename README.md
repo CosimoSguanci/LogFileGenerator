@@ -58,3 +58,5 @@ hadoop jar LogFileGenerator-assembly-0.1.jar Tasks.Task2 logs/input logs/output 
 ```
 
 Details about the implemented tasks can be found in the `doc/DOC.md` file, while example of input/output for all the tasks can be found in the `results` folder.
+
+Video showing the deployment on AWS EMR: https://youtu.be/0YnlTePCxhA
