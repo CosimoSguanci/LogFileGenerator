@@ -20,6 +20,7 @@ class Task3Test extends AnyFlatSpec with Matchers {
     val text = new Text("11:44:27.040 [scala-execution-context-global-14] INFO  HelperUtils.Parameters$ - ;kNI&V%v<c#eSDK@lPY(")
     mapper.map(new LongWritable(1L), text, mockContext)
 
+    // We verify that the context.write function has been called by the mapper with the right parameters
     verify(mockContext).write(new Text("INFO"), new IntWritable(1))
   }
 }
