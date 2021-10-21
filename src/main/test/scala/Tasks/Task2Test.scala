@@ -1,7 +1,7 @@
 package Tasks
 
 
-import Tasks.Task1.Task1Mapper
+import Tasks.Task2.Task2Mapper
 import org.mockito.Mockito.{mock, verify}
 
 import java.io.IOException
@@ -13,13 +13,13 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.flatspec.AnyFlatSpec
 
 
-class TaskTest extends AnyFlatSpec with Matchers {
+class Task2Test extends AnyFlatSpec with Matchers {
   it should "correctly map values" in {
-    val mapper = new Task1Mapper()
+    val mapper = new Task2Mapper()
     val mockContext = mock(classOf[Mapper[Object, Text, Text, Text]#Context])
-    val text = new Text("11:44:27.040 [scala-execution-context-global-14] INFO  HelperUtils.Parameters$ - ;kNI&V%v<c#eSDK@lPY(")
+    val text = new Text("11:44:27.040 [scala-execution-context-global-14] ERROR  HelperUtils.Parameters$ - ;kNI&V%v<c#eSDK@lPY(")
     mapper.map(new LongWritable(1L), text, mockContext)
 
-    verify(mockContext).write(new Text("11:44:27 - 11:44:27.999 - INFO"), new Text(";kNI&V%v<c#eSDK@lPY("))
+    verify(mockContext).write(new Text("11:44:25 - 11:44:45.999"), new Text(";kNI&V%v<c#eSDK@lPY("))
   }
 }
