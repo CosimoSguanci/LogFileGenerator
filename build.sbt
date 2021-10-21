@@ -11,6 +11,7 @@ val apacheCommonIOVersion = "2.11.0"
 val scalacticVersion = "3.2.9"
 val generexVersion = "1.0.2"
 val hadoopClientVersion = "3.3.1"
+val mockitoVersion = "3.2.10.0"
 
 resolvers += Resolver.jcenterRepo
 
@@ -23,6 +24,7 @@ libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % scalacticVersion,
   "org.scalatest" %% "scalatest" % scalacticVersion % Test,
   "org.scalatest" %% "scalatest-featurespec" % scalacticVersion % Test,
+  "org.scalatestplus" %% "mockito-3-4" % mockitoVersion % "test",
   "com.typesafe" % "config" % typesafeConfigVersion,
   "com.github.mifmif" % "generex" % generexVersion,
   "org.apache.hadoop" % "hadoop-client" % hadoopClientVersion
