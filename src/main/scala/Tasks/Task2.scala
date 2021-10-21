@@ -197,6 +197,7 @@ object Task2 {
     FileInputFormat.addInputPath(job, new Path(args(0)))
     FileOutputFormat.setOutputPath(job, new Path(args(1)))
     job.waitForCompletion(true)
+    job.setNumReduceTasks(1)
 
     // JOB #2
     val configuration2 = new Configuration
@@ -206,6 +207,7 @@ object Task2 {
     job2.setMapperClass(classOf[Task2SortMapper]) // No need for the Reducer for the job #2
     job2.setOutputKeyClass(classOf[IntWritable])
     job2.setOutputValueClass(classOf[Text])
+    job2.setNumReduceTasks(1)
 
     // Custom Sort Comparator for descending ordering
     job2.setSortComparatorClass(classOf[DescendingIntComparator])

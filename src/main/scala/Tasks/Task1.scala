@@ -150,6 +150,7 @@ object Task1 {
     job.setReducerClass(classOf[Task1Reducer])
     job.setOutputKeyClass(classOf[Text])
     job.setOutputValueClass(classOf[Text])
+    job.setNumReduceTasks(1)
     FileInputFormat.addInputPath(job, new Path(args(0)))
     FileOutputFormat.setOutputPath(job, new Path(args(1)))
     System.exit(if (job.waitForCompletion(true)) 0 else 1)
