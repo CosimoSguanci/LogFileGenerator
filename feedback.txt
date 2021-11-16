@@ -5,7 +5,7 @@ Grading Evaluation:
 - only some basic map/reduce or CORBA examples from some repos are given and nothing else is done: zero grade;
 	* 4 tasks/ video present: -0%
 - having less than five unit and/or integration scalatests: up to 5% lost;
-	* 4 unit tests present: -1%
+	* 5 unit tests present: -0%
 - missing comments and explanations from your program: up to 5% lost;
 	* comments present: -0% 
 - logging is not used in your programs: up to 3% lost;
@@ -23,6 +23,6 @@ Grading Evaluation:
 - the documentation exists but it is insufficient to understand your program design and models and how you assembled and deployed all components of your mappers and reducers: up to 5% lost;
 	* documentation present: -0%
 	
-Final Grade: 8%
+Final Grade: 9%
 
-Comments:  Good job, great video. Just missing one unit test. 
+Comments:  Good job, great video.
